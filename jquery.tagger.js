@@ -12,7 +12,8 @@
 
 $.fn.tagger = function(options) {
   return this.each(function(){
-    var self = $(this), opts = $.extend({}, $.fn.tagger.defaults, options);
+    var self = $(this),
+        opts = $.extend({}, $.fn.tagger.defaults, options);
     
     self.disableTextSelect();
   });
@@ -22,13 +23,17 @@ $.fn.tagger.defaults = {
   
 };
 
-// Form Components.
+// Declare form type components.
 $.fn.tagger.textfield = {
-
+  element: function() {
+    return $('input[type=text]', this.container);
+  }
 };
 
 $.fn.tagger.select = {
-  
+  element: function() {
+    return $('select', this.container);
+  }
 };
 
 // Disable text selection.
