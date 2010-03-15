@@ -10,41 +10,70 @@
 
 ;(function($){
 
-$.fn.tagger = function(options) {
+$.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
     var self = $(this),
-        opts = $.extend({}, $.fn.tagger.defaults, options),
-        tagger = $.fn.tagger.component[self.context.type],
-        container = $('<ul class="tagger"></ul>').insertAfter(self);
+        tagger = $.fn.tagger,
+        opts = $.extend({}, $.fn.tagger.defaults, ( typeof arg1 == 'object' ) ? arg1 : arg2);
     
-    tagger.element = self;
-    tagger.init(opts);
+    tagger.container = $('<ul class="tagger"></ul>').insertAfter(self);
+    tagger.component = $.fn.tagger.component[self.context.nodeName.toLowerCase()];
     
-    $.each(tagger.list(), function(i, t){
-      $('<li>').text(t).css('cursor', 'pointer').click(function(){
-        tagger.has($(this)) ?
-          tagger.remove($(this)) : tagger.add($(this));
-        
-        // Cancel event propagations.
-        return false;
-      }).appendTo(container);
-    });
+    if ( !tagger.component.init(self, opts) )
+      return false;
+  
+    if ( typeof arg1 == 'string' )
+      tagger[arg1](arg2);
     
     self.disableTextSelect();
   });
 };
 
-$.fn.tagger.defaults = {
-  separator: ', ',
-  active: 'selected'
-};
+$.extend($.fn.tagger, {
+  defaults: {
+    separator: ', ',
+    active: 'selected'
+  },
+  create: function(tag) {
+    var self = this;
+    
+    if ( typeof tag == 'object' ) {
+      $.each(tag, function(i, t){
+        return $('<li>').text(t).click(function(){
+          self.component.has($(this)) ?
+            self.component.remove($(this)) : self.component.add($(this));
+          return false; // Disable event propagation.
+        }).appendTo(self.container);
+      });
+    } else {
+      return $('<li>').text(tag).click(function(){
+        self.component.has($(this)) ?
+          self.component.remove($(this)) : self.component.add($(this));
+        return false; // Disable event propagation.
+      }).appendTo(self.container);
+    }
+  },
+  remove: function(tag) {
+    $('li:contains('+ tag +')', this.container).remove();
+  }
+});
 
 $.fn.tagger.component = [];
 
 // Declare form type components.
-$.fn.tagger.component['text'] = {
-  init: function(opts) {
+$.fn.tagger.component.input = {
+  init: function(element, opts) {
+    var self = this;
+    
     this.opts = opts;
+    this.element = element;
+    
+    $.each(this.list(), function(i, t){
+      tag = $.fn.tagger.create(t);
+      tag.addClass(self.opts.active);
+    });
+    
+    return this.element.has('[type="text"]');
   },
   has: function(tag) {
     var has = false;
@@ -81,9 +110,12 @@ $.fn.tagger.component['text'] = {
   }
 };
 
-$.fn.tagger.component['select-multiple'] = {
-  init: function(opts) {
+$.fn.tagger.component.select = {
+  init: function(element, opts) {
+    this.opts = opts;
+    this.element = element;
     
+    return this.element.has('[multiple="multiple"]');
   },
   has: function(tag) {
     
@@ -114,7 +146,7 @@ $.fn.disableTextSelect = function() {
 
 // Debugger.
 function log(message) {
-  if ( window.console )
+  if ( window.console && window.console.log )
     window.console.log(message);
 }
 

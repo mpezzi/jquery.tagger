@@ -1,0 +1,25 @@
+.tagger {
+  display: block;
+  margin: 5px 0 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tagger li {
+  display: block;
+  float: left;
+  margin: 0 5px 5px 0;
+  padding: 2px 5px;
+  border: 1px solid #808080;
+  background: #dadada;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.tagger li:hover {
+  border-color: #000;
+}
+
+.tagger li.selected {
+  background-color: #f00;
+}
