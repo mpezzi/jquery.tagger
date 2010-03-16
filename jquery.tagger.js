@@ -21,9 +21,6 @@ $.fn.tagger = function(arg1, arg2) {
     
     if ( !tagger.component.init(self, opts) )
       return false;
-  
-    if ( typeof arg1 == 'string' )
-      tagger[arg1](arg2);
     
     self.disableTextSelect();
   });
@@ -34,24 +31,18 @@ $.extend($.fn.tagger, {
     separator: ', ',
     active: 'selected'
   },
-  create: function(tag) {
+  create: function(tags) {
     var self = this;
     
-    if ( typeof tag == 'object' ) {
-      $.each(tag, function(i, t){
-        return $('<li>').text(t).click(function(){
-          self.component.has($(this)) ?
-            self.component.remove($(this)) : self.component.add($(this));
-          return false; // Disable event propagation.
-        }).appendTo(self.container);
-      });
-    } else {
-      return $('<li>').text(tag).click(function(){
+    if ( typeof tags == 'string' )
+      tags = [tags];
+    
+    $.each(tags, function(i, t){
+      $('<li>').text(t).click(function(){
         self.component.has($(this)) ?
           self.component.remove($(this)) : self.component.add($(this));
-        return false; // Disable event propagation.
       }).appendTo(self.container);
-    }
+    });
   },
   remove: function(tag) {
     $('li:contains('+ tag +')', this.container).remove();
@@ -70,7 +61,7 @@ $.fn.tagger.component.input = {
     
     $.each(this.list(), function(i, t){
       tag = $.fn.tagger.create(t);
-      tag.addClass(self.opts.active);
+      // tag.addClass(self.opts.active);
     });
     
     return this.element.has('[type="text"]');
