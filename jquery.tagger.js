@@ -14,15 +14,23 @@ $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
     var self = $(this),
         tagger = $.fn.tagger,
-        opts = $.extend({}, $.fn.tagger.defaults, ( typeof arg1 == 'object' ) ? arg1 : arg2);
+        opts = $.extend({}, $.fn.tagger.defaults, ( typeof arg1 == 'object' ) ? arg1 : self.data('tagger.opts'));
+    
+    self.data('tagger.opts', opts);
     
     tagger.container = $('<ul class="tagger"></ul>').insertAfter(self);
     tagger.component = $.fn.tagger.component[self.context.nodeName.toLowerCase()];
+    tagger.component.opts = opts;
+    tagger.component.element = self;
     
-    if ( !tagger.component.init(self, opts) )
-      return false;
-    
-    self.disableTextSelect();
+    if ( typeof arg1 == 'string' ) {
+      tagger[arg1](arg2);
+    } else {
+      if ( !tagger.component.init() )
+        return false;
+      
+      self.disableTextSelect();
+    }
   });
 };
 
@@ -31,21 +39,23 @@ $.extend($.fn.tagger, {
     separator: ', ',
     active: 'selected'
   },
-  create: function(tags) {
+  create: function(tag) {
     var self = this;
-    
-    if ( typeof tags == 'string' )
-      tags = [tags];
-    
-    $.each(tags, function(i, t){
-      $('<li>').text(t).click(function(){
-        self.component.has($(this)) ?
-          self.component.remove($(this)) : self.component.add($(this));
-      }).appendTo(self.container);
-    });
+    return $('<li>').text(tag).click(function(){
+      self.component.selected(this) ?
+        self.unselect(this) : self.select(this);
+    }).appendTo(this.container);
   },
   remove: function(tag) {
-    $('li:contains('+ tag +')', this.container).remove();
+    
+  },
+  select: function(tag) {
+    this.component.select(tag);
+    $(tag).addClass(this.component.opts.active);
+  },
+  unselect: function(tag) {
+    this.component.unselect(tag);
+    $(tag).removeClass(this.component.opts.active);
   }
 });
 
@@ -53,6 +63,47 @@ $.fn.tagger.component = [];
 
 // Declare form type components.
 $.fn.tagger.component.input = {
+  init: function() {
+    list = this.list();
+    for ( var i in list ) {
+      tag = $.fn.tagger.create(list[i]);
+      $(tag).addClass(this.opts.active);
+    }
+  },
+  toggle: function() {
+    this.selected(this) ?
+      this.unselect(this) : this.select(this);
+  },
+  selected: function(tag) {
+    tags = this.list();
+    for ( var i in tags ) {
+      if ( tags[i] == $(tag).text() )
+        return true;
+    }
+    
+    return false;
+  },
+  select: function(tag) {
+    text = $(tag).text();
+    this.element.val() ?
+      this.element.val(this.element.val() + this.opts.separator + text) :
+      this.element.val(text);
+  },
+  unselect: function(tag) {
+    var tag = $(tag).text(), tags = this.list();
+    for ( var i in tags ) {
+      if ( tags[i] == tag ) {
+        tags.splice(i, 1);
+        this.element.val(tags.join(this.opts.separator));
+      }
+    }
+  },
+  list: function() {
+    return this.element.val().split(this.opts.separator);
+  }
+};
+
+$.fn.tagger.component.xinput = {
   init: function(element, opts) {
     var self = this;
     
