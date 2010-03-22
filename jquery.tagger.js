@@ -10,55 +10,64 @@
 
 ;(function($){
 
+var version = '1.0';
+
 $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
-    var self = $(this),
+    var element = $(this),
         tagger = $.fn.tagger,
-        opts = $.extend({}, $.fn.tagger.defaults, ( typeof arg1 == 'object' ) ? arg1 : self.data('tagger.opts'));
+        opts = ( typeof element.data('tagger.opts') == 'undefined' ) ?
+                  $.extend({}, $.fn.tagger.defaults, arg1) : element.data('tagger.opts');
     
-    self.data('tagger.opts', opts);
+    // Save options.
+    element.data('tagger.opts', opts);
     
-    tagger.container = $('<ul class="tagger"></ul>').insertAfter(self);
-    tagger.component = $.fn.tagger.component[self.context.nodeName.toLowerCase()];
-    tagger.component.opts = opts;
-    tagger.component.element = self;
-    
-    if ( typeof arg1 == 'string' ) {
-      tagger[arg1](arg2);
-    } else {
+    // Determine tagger mode.
+    if ( typeof arg1 == 'object' ) {
+      
+      // Setup tagger.
+      tagger.container = $('<ul class="tagger"></ul>').insertAfter(element);
+      tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
+      tagger.component.opts = opts;
+      tagger.component.element = element;
+      
       if ( !tagger.component.init() )
         return false;
       
-      self.disableTextSelect();
+      element.container.disableTextSelect();
+    } else if ( typeof tagger[arg1] !== 'undefined' ) {
+      tagger[arg1](arg2);
     }
+    
   });
 };
 
 $.extend($.fn.tagger, {
   defaults: {
     separator: ', ',
-    active: 'selected'
+    selected: 'selected'
   },
-  create: function(tag) {
+  create: function(arg) {
     var self = this;
-    return $('<li>').text(tag).click(function(){
+    return $('<li>').text(arg).click(function(){
       self.component.selected(this) ?
         self.unselect(this) : self.select(this);
     }).appendTo(this.container);
   },
-  remove: function(tag) {
+  remove: function(arg) {
     
   },
-  select: function(tag) {
-    this.component.select(tag);
-    $(tag).addClass(this.component.opts.active);
+  select: function(arg) {
+    this.component.select(arg);
+    $(arg).addClass(this.component.opts.active);
   },
-  unselect: function(tag) {
-    this.component.unselect(tag);
-    $(tag).removeClass(this.component.opts.active);
+  unselect: function(arg) {
+    this.component.unselect(arg);
+    $(arg).removeClass(this.component.opts.active);
   }
 });
 
+// Components.
 $.fn.tagger.component = [];
 
 // Declare form type components.
@@ -100,76 +109,6 @@ $.fn.tagger.component.input = {
   },
   list: function() {
     return this.element.val().split(this.opts.separator);
-  }
-};
-
-$.fn.tagger.component.xinput = {
-  init: function(element, opts) {
-    var self = this;
-    
-    this.opts = opts;
-    this.element = element;
-    
-    $.each(this.list(), function(i, t){
-      tag = $.fn.tagger.create(t);
-      // tag.addClass(self.opts.active);
-    });
-    
-    return this.element.has('[type="text"]');
-  },
-  has: function(tag) {
-    var has = false;
-    
-    $.each(this.list(), function(i, t){
-      if ( t == tag.text() )
-        has = true;
-    });
-    
-    return has;
-  },
-  add: function(tag) {
-    this.element.val() ?
-      this.element.val(this.element.val() + this.opts.separator + tag.text()) :
-      this.element.val(tag.text());
-    
-    tag.addClass(this.opts.active);
-  },
-  remove: function(tag) {
-    var self = this;
-    
-    $.each(self.list(), function(i, t){
-      if ( t == tag.text() ) {
-        list = self.list();
-        list.splice(i, 1);
-        self.element.val(list.join(self.opts.separator));
-      }
-    });
-    
-    tag.removeClass(this.opts.active);
-  },
-  list: function() {
-    return this.element.val().split(this.opts.separator);
-  }
-};
-
-$.fn.tagger.component.select = {
-  init: function(element, opts) {
-    this.opts = opts;
-    this.element = element;
-    
-    return this.element.has('[multiple="multiple"]');
-  },
-  has: function(tag) {
-    
-  },
-  add: function(tag) {
-    
-  },
-  remove: function(tag) {
-    
-  },
-  list: function() {
-    
   }
 };
 
