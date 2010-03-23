@@ -50,8 +50,8 @@ $.extend($.fn.tagger, {
   add: function(tagger, args) {
     var self = this;
     if ( typeof args == 'object' ) {
-      $.each(args, function(i){
-        self.create(tagger, i);
+      $.each(args, function(i, t){
+        self.create(tagger, t);
       });
     } else {
       return self.create(tagger, args);
