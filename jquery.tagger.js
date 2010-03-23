@@ -16,10 +16,11 @@ $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
     var element = $(this), opts = build_options(element, arg1, arg2), tagger = element.data('tagger') || {}, initialized = element.data('tagger.initialized') || false;
     
+    tagger.opts = opts;
+    tagger.element = element;
+    
     // Initialize tagger.
     if ( !initialized ) {
-      tagger.opts = opts;
-      tagger.element = element;
       tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
       tagger.container = $('<ul class="tagger"></ul>').insertAfter(element).disableTextSelect();
       
