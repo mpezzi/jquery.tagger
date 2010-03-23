@@ -28,7 +28,10 @@ $.fn.tagger = function(arg1, arg2) {
       
       // Initialize the component.
       tagger.component.init(tagger);
-    } else if ( typeof $.fn.tagger[arg1] !== 'undefined' ) {
+    }
+    
+    // Method was passed, execute.
+    else if ( typeof arg1 == 'string' && typeof $.fn.tagger[arg1] !== 'undefined' ) {
       $.fn.tagger[arg1](tagger, arg2);
     }
   });
@@ -137,16 +140,12 @@ $.fn.tagger.component.select = {
       if ( $(this).text() == $(tag).text() )
         $(this).attr('selected', 'selected');
     });
-    
-    //this.element.find('option:contains("'+ $(tag).text() +'")').attr('selected', 'selected');
   },
   unselect: function(tag) {
     this.list().each(function(){
       if ( $(this).text() == $(tag).text() )
         $(this).removeAttr('selected');
     });
-    
-    //this.element.find('option:contains("'+ $(tag).text() +'")').removeAttr('selected');
   },
   list: function() {
     return this.element.find('option');
