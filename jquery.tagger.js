@@ -50,18 +50,20 @@ $.extend($.fn.tagger, {
   create: function(args) {
     var self = this;
     
-    if ( typeof args == 'object' ) {
-      for ( var i in args ) {
-        $('<li>').text(args[i]).click(function(){
-          self.component.selected(this) ?
-            self.unselect(this) : self.select(this);
-        }).appendTo(this.container);
-      }
+    return $('<li>').text(args).click(function(){
+      self.component.selected(this) ?
+        self.unselect(this) : self.select(this);
+    }).appendTo(this.container);
+  },
+  add: function(arg) {
+    var self = this;
+    
+    if ( typeof arg == 'object' ) {
+      $.each(arg, function(t){
+        self.create(t);
+      });
     } else {
-      return $('<li>').text(args).click(function(){
-        self.component.selected(this) ?
-          self.unselect(this) : self.select(this);
-      }).appendTo(this.container);
+      return self.create(arg);
     }
   },
   remove: function(arg) {
