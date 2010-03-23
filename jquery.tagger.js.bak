@@ -1,4 +1,4 @@
-/*
+/**
  * jQuery Tagger Plugin by M. Pezzi
  * http://thespiral.ca/jquery/tagger/demo/
  * Version: 1.0 (03/09/10)
@@ -10,56 +10,76 @@
 
 ;(function($){
 
+var version = '1.0';
+
 $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
-    var self = $(this),
-        tagger = $.fn.tagger,
-        opts = $.extend({}, $.fn.tagger.defaults, ( typeof arg1 == 'object' ) ? arg1 : self.data('tagger.opts'));
+    var element = $(this), tagger = $.fn.tagger,
+        opts = ( typeof element.data('tagger.opts') == 'undefined' ) ?
+                  $.extend({}, $.fn.tagger.defaults, arg1) : element.data('tagger.opts');
     
-    self.data('tagger.opts', opts);
+    // Save options.
+    element.data('tagger.opts', opts);
     
-    tagger.container = $('<ul class="tagger"></ul>').insertAfter(self);
-    tagger.component = $.fn.tagger.component[self.context.nodeName.toLowerCase()];
-    tagger.component.opts = opts;
-    tagger.component.element = self;
-    
-    if ( typeof arg1 == 'string' ) {
-      tagger[arg1](arg2);
-    } else {
+    // Determine tagger mode.
+    if ( ( typeof arg1 == 'undefined' || typeof arg1 == 'object' ) && !element.data('tagger.initialized') ) {
+      
+      // Setup tagger.
+      tagger.container = $('<ul class="tagger"></ul>').insertAfter(element);
+      tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
+      tagger.component.opts = opts;
+      tagger.component.element = element;
+      
       if ( !tagger.component.init() )
         return false;
       
-      self.disableTextSelect();
+      tagger.container.disableTextSelect();
+      
+      element.data('tagger.initialized', true);
+    } else if ( typeof tagger[arg1] !== 'undefined' ) {
+      tagger[arg1](arg2);
     }
+    
   });
 };
 
 $.extend($.fn.tagger, {
+  component: [],
   defaults: {
     separator: ', ',
-    active: 'selected'
+    selected: 'selected'
   },
-  create: function(tag) {
+  create: function(args) {
     var self = this;
-    return $('<li>').text(tag).click(function(){
+    
+    return $('<li>').text(args).click(function(){
       self.component.selected(this) ?
         self.unselect(this) : self.select(this);
     }).appendTo(this.container);
   },
-  remove: function(tag) {
+  add: function(arg) {
+    var self = this;
+    
+    if ( typeof arg == 'object' ) {
+      $.each(arg, function(t){
+        self.create(t);
+      });
+    } else {
+      return self.create(arg);
+    }
+  },
+  remove: function(arg) {
     
   },
-  select: function(tag) {
-    this.component.select(tag);
-    $(tag).addClass(this.component.opts.active);
+  select: function(arg) {
+    this.component.select(arg);
+    $(arg).addClass(this.component.opts.selected);
   },
-  unselect: function(tag) {
-    this.component.unselect(tag);
-    $(tag).removeClass(this.component.opts.active);
+  unselect: function(arg) {
+    this.component.unselect(arg);
+    $(arg).removeClass(this.component.opts.selected);
   }
 });
-
-$.fn.tagger.component = [];
 
 // Declare form type components.
 $.fn.tagger.component.input = {
@@ -67,8 +87,10 @@ $.fn.tagger.component.input = {
     list = this.list();
     for ( var i in list ) {
       tag = $.fn.tagger.create(list[i]);
-      $(tag).addClass(this.opts.active);
+      $(tag).addClass(this.opts.selected);
     }
+    
+    return this.element.has('[type="text"]');
   },
   toggle: function() {
     this.selected(this) ?
@@ -103,73 +125,32 @@ $.fn.tagger.component.input = {
   }
 };
 
-$.fn.tagger.component.xinput = {
-  init: function(element, opts) {
-    var self = this;
-    
-    this.opts = opts;
-    this.element = element;
-    
-    $.each(this.list(), function(i, t){
-      tag = $.fn.tagger.create(t);
-      // tag.addClass(self.opts.active);
-    });
-    
-    return this.element.has('[type="text"]');
-  },
-  has: function(tag) {
-    var has = false;
-    
-    $.each(this.list(), function(i, t){
-      if ( t == tag.text() )
-        has = true;
-    });
-    
-    return has;
-  },
-  add: function(tag) {
-    this.element.val() ?
-      this.element.val(this.element.val() + this.opts.separator + tag.text()) :
-      this.element.val(tag.text());
-    
-    tag.addClass(this.opts.active);
-  },
-  remove: function(tag) {
-    var self = this;
-    
-    $.each(self.list(), function(i, t){
-      if ( t == tag.text() ) {
-        list = self.list();
-        list.splice(i, 1);
-        self.element.val(list.join(self.opts.separator));
-      }
-    });
-    
-    tag.removeClass(this.opts.active);
-  },
-  list: function() {
-    return this.element.val().split(this.opts.separator);
-  }
-};
-
 $.fn.tagger.component.select = {
-  init: function(element, opts) {
-    this.opts = opts;
-    this.element = element;
+  init: function() {
+    var self = this;
     
-    return this.element.has('[multiple="multiple"]');
+    this.list().each(function(){
+      tag = $.fn.tagger.create($(this).text());
+      //if ( $(this).has('[selected="selected"]') )
+        //$(tag).addClass(self.opts.selected);
+    });
+    
+    return true;
   },
-  has: function(tag) {
+  toggle: function() {
     
   },
-  add: function(tag) {
+  selected: function(tag) {
     
   },
-  remove: function(tag) {
+  select: function(tag) {
+    
+  },
+  unselect: function(tag) {
     
   },
   list: function() {
-    
+    return this.element.find('option');
   }
 };
 
