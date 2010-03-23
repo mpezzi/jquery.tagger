@@ -117,20 +117,26 @@ $.fn.tagger.component.select = {
     this.element = tagger.element;
     
     this.list().each(function(){
-      $.fn.tagger.create(tagger, $(this).text());
+      tag = $.fn.tagger.create(tagger, $(this).text());
+      if ( $(this).is(':selected') )
+        tag.addClass(tagger.opts.selected);
     });
   },
-  toggle: function() {
-    
-  },
   selected: function(tag) {
+    var selected = false;
+    this.list().each(function(){
+      if ( $(this).text() == $(tag).text() && $(this).is(':selected') ) {
+        selected = true;
+      }
+    });
     
+    return selected;
   },
   select: function(tag) {
-    
+    this.element.find('option:contains("'+ $(tag).text() +'")').attr('selected', 'selected');
   },
   unselect: function(tag) {
-    
+    this.element.find('option:contains("'+ $(tag).text() +'")').removeAttr('selected');
   },
   list: function() {
     return this.element.find('option');
