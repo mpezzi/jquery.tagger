@@ -133,10 +133,20 @@ $.fn.tagger.component.select = {
     return selected;
   },
   select: function(tag) {
-    this.element.find('option:contains("'+ $(tag).text() +'")').attr('selected', 'selected');
+    this.list().each(function(){
+      if ( $(this).text() == $(tag).text() )
+        $(this).attr('selected', 'selected');
+    });
+    
+    //this.element.find('option:contains("'+ $(tag).text() +'")').attr('selected', 'selected');
   },
   unselect: function(tag) {
-    this.element.find('option:contains("'+ $(tag).text() +'")').removeAttr('selected');
+    this.list().each(function(){
+      if ( $(this).text() == $(tag).text() )
+        $(this).removeAttr('selected');
+    });
+    
+    //this.element.find('option:contains("'+ $(tag).text() +'")').removeAttr('selected');
   },
   list: function() {
     return this.element.find('option');
