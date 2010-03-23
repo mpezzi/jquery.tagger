@@ -1,4 +1,4 @@
-/*
+/**
  * jQuery Tagger Plugin by M. Pezzi
  * http://thespiral.ca/jquery/tagger/demo/
  * Version: 1.0 (03/09/10)
@@ -14,8 +14,7 @@ var version = '1.0';
 
 $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
-    var element = $(this),
-        tagger = $.fn.tagger,
+    var element = $(this), tagger = $.fn.tagger,
         opts = ( typeof element.data('tagger.opts') == 'undefined' ) ?
                   $.extend({}, $.fn.tagger.defaults, arg1) : element.data('tagger.opts');
     
@@ -23,7 +22,7 @@ $.fn.tagger = function(arg1, arg2) {
     element.data('tagger.opts', opts);
     
     // Determine tagger mode.
-    if ( typeof arg1 == 'undefined' || typeof arg1 == 'object' ) {
+    if ( ( typeof arg1 == 'undefined' || typeof arg1 == 'object' ) && !element.data('tagger.initialized') ) {
       
       // Setup tagger.
       tagger.container = $('<ul class="tagger"></ul>').insertAfter(element);
@@ -35,6 +34,8 @@ $.fn.tagger = function(arg1, arg2) {
         return false;
       
       tagger.container.disableTextSelect();
+      
+      element.data('tagger.initialized', true);
     } else if ( typeof tagger[arg1] !== 'undefined' ) {
       tagger[arg1](arg2);
     }
@@ -43,6 +44,7 @@ $.fn.tagger = function(arg1, arg2) {
 };
 
 $.extend($.fn.tagger, {
+  component: [],
   defaults: {
     separator: ', ',
     selected: 'selected'
@@ -78,9 +80,6 @@ $.extend($.fn.tagger, {
     $(arg).removeClass(this.component.opts.selected);
   }
 });
-
-// Components.
-$.fn.tagger.component = [];
 
 // Declare form type components.
 $.fn.tagger.component.input = {
@@ -123,6 +122,35 @@ $.fn.tagger.component.input = {
   },
   list: function() {
     return this.element.val().split(this.opts.separator);
+  }
+};
+
+$.fn.tagger.component.select = {
+  init: function() {
+    var self = this;
+    
+    this.list().each(function(){
+      tag = $.fn.tagger.create($(this).text());
+      //if ( $(this).has('[selected="selected"]') )
+        //$(tag).addClass(self.opts.selected);
+    });
+    
+    return true;
+  },
+  toggle: function() {
+    
+  },
+  selected: function(tag) {
+    
+  },
+  select: function(tag) {
+    
+  },
+  unselect: function(tag) {
+    
+  },
+  list: function() {
+    return this.element.find('option');
   }
 };
 
