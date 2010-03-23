@@ -14,32 +14,23 @@ var version = '1.0';
 
 $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
-    var element = $(this), tagger = $.fn.tagger,
-        opts = ( typeof element.data('tagger.opts') == 'undefined' ) ?
-                  $.extend({}, $.fn.tagger.defaults, arg1) : element.data('tagger.opts');
+    var element = $(this), opts = build_options(element, arg1, arg2), tagger = element.data('tagger') || {}, initialized = element.data('tagger.initialized') || false;
     
-    // Save options.
-    element.data('tagger.opts', opts);
-    
-    // Determine tagger mode.
-    if ( ( typeof arg1 == 'undefined' || typeof arg1 == 'object' ) && !element.data('tagger.initialized') ) {
-      
-      // Setup tagger.
-      tagger.container = $('<ul class="tagger"></ul>').insertAfter(element);
+    // Initialize tagger.
+    if ( !initialized ) {
+      tagger.opts = opts;
+      tagger.element = element;
       tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
-      tagger.component.opts = opts;
-      tagger.component.element = element;
+      tagger.container = $('<ul class="tagger"></ul>').insertAfter(element).disableTextSelect();
       
-      if ( !tagger.component.init() )
-        return false;
+      // Save tagger controller.
+      element.data('tagger', tagger);
       
-      tagger.container.disableTextSelect();
-      
-      element.data('tagger.initialized', true);
-    } else if ( typeof tagger[arg1] !== 'undefined' ) {
-      tagger[arg1](arg2);
+      // Initialize the component.
+      tagger.component.init(tagger);
+    } else if ( typeof $.fn.tagger[arg1] !== 'undefined' ) {
+      $.fn.tagger[arg1](tagger, arg2);
     }
-    
   });
 };
 
@@ -49,76 +40,54 @@ $.extend($.fn.tagger, {
     separator: ', ',
     selected: 'selected'
   },
-  create: function(args) {
+  create: function(tagger, arg) {
     var self = this;
-    
-    return $('<li>').text(args).click(function(){
-      self.component.selected(this) ?
+    return $('<li>').text(arg).click(function(){
+      tagger.component.selected(this) ?
         self.unselect(this) : self.select(this);
-    }).appendTo(this.container);
+    }).appendTo(tagger.container);
   },
-  add: function(arg) {
+  add: function(tagger, args) {
     var self = this;
-    
-    if ( typeof arg == 'object' ) {
-      $.each(arg, function(t){
-        self.create(t);
+    if ( typeof args == 'object' ) {
+      $.each(args, function(i){
+        self.create(tagger, i);
       });
     } else {
-      return self.create(arg);
+      return self.create(tagger, args);
     }
   },
   remove: function(arg) {
     
   },
   select: function(arg) {
-    this.component.select(arg);
-    $(arg).addClass(this.component.opts.selected);
+    
   },
   unselect: function(arg) {
-    this.component.unselect(arg);
-    $(arg).removeClass(this.component.opts.selected);
+    
   }
 });
 
 // Declare form type components.
 $.fn.tagger.component.input = {
-  init: function() {
+  init: function(tagger) {
+    this.opts = tagger.opts;
+    this.element = tagger.element;
+    
     list = this.list();
     for ( var i in list ) {
-      tag = $.fn.tagger.create(list[i]);
+      tag = $.fn.tagger.create(tagger, list[i]);
       $(tag).addClass(this.opts.selected);
     }
-    
-    return this.element.has('[type="text"]');
-  },
-  toggle: function() {
-    this.selected(this) ?
-      this.unselect(this) : this.select(this);
   },
   selected: function(tag) {
-    tags = this.list();
-    for ( var i in tags ) {
-      if ( tags[i] == $(tag).text() )
-        return true;
-    }
     
-    return false;
   },
   select: function(tag) {
-    text = $(tag).text();
-    this.element.val() ?
-      this.element.val(this.element.val() + this.opts.separator + text) :
-      this.element.val(text);
+    
   },
   unselect: function(tag) {
-    var tag = $(tag).text(), tags = this.list();
-    for ( var i in tags ) {
-      if ( tags[i] == tag ) {
-        tags.splice(i, 1);
-        this.element.val(tags.join(this.opts.separator));
-      }
-    }
+    
   },
   list: function() {
     return this.element.val().split(this.opts.separator);
@@ -126,16 +95,13 @@ $.fn.tagger.component.input = {
 };
 
 $.fn.tagger.component.select = {
-  init: function() {
-    var self = this;
+  init: function(tagger) {
+    this.opts = tagger.opts;
+    this.element = tagger.element;
     
     this.list().each(function(){
-      tag = $.fn.tagger.create($(this).text());
-      //if ( $(this).has('[selected="selected"]') )
-        //$(tag).addClass(self.opts.selected);
+      $.fn.tagger.create(tagger, $(this).text());
     });
-    
-    return true;
   },
   toggle: function() {
     
@@ -166,6 +132,20 @@ $.fn.disableTextSelect = function() {
     }
   });
 };
+
+// Build options and save them in the element data.
+function build_options(element, arg1, arg2) {
+  if ( typeof element.data('tagger.opts') !== 'undefined' ) {
+    opts = element.data('tagger.opts');
+    element.data('tagger.initialized', true);
+  } else {
+    opts = $.extend({}, $.fn.tagger.defaults, arg1);
+    element.data('tagger.opts', opts);
+    element.data('tagger.initialized', false);
+  }
+  
+  return opts;
+}
 
 // Debugger.
 function log(message) {
