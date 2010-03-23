@@ -44,7 +44,7 @@ $.extend($.fn.tagger, {
     var self = this;
     return $('<li>').text(arg).click(function(){
       tagger.component.selected(this) ?
-        self.unselect(this) : self.select(this);
+        self.unselect(tagger, this) : self.select(tagger, this);
     }).appendTo(tagger.container);
   },
   add: function(tagger, args) {
@@ -60,11 +60,13 @@ $.extend($.fn.tagger, {
   remove: function(arg) {
     
   },
-  select: function(arg) {
-    
+  select: function(tagger, arg) {
+    tagger.component.select(arg);
+    $(arg).addClass(tagger.opts.selected);
   },
-  unselect: function(arg) {
-    
+  unselect: function(tagger, arg) {
+    tagger.component.unselect(arg);
+    $(arg).removeClass(tagger.opts.selected);
   }
 });
 
@@ -81,13 +83,28 @@ $.fn.tagger.component.input = {
     }
   },
   selected: function(tag) {
+    tags = this.list();
+    for ( var i in tags ) {
+      if ( tags[i] == $(tag).text() )
+        return true;
+    }
     
+    return false;
   },
   select: function(tag) {
-    
+    text = $(tag).text();
+    this.element.val() ?
+      this.element.val(this.element.val() + this.opts.separator + text) :
+      this.element.val(text);
   },
   unselect: function(tag) {
-    
+    var tag = $(tag).text(), tags = this.list();
+    for ( var i in tags ) {
+      if ( tags[i] == tag ) {
+        tags.splice(i, 1);
+        this.element.val(tags.join(this.opts.separator));
+      }
+    }
   },
   list: function() {
     return this.element.val().split(this.opts.separator);
