@@ -23,7 +23,7 @@ $.fn.tagger = function(arg1, arg2) {
     element.data('tagger.opts', opts);
     
     // Determine tagger mode.
-    if ( typeof arg1 == 'object' ) {
+    if ( typeof arg1 == 'undefined' || typeof arg1 == 'object' ) {
       
       // Setup tagger.
       tagger.container = $('<ul class="tagger"></ul>').insertAfter(element);
@@ -34,7 +34,7 @@ $.fn.tagger = function(arg1, arg2) {
       if ( !tagger.component.init() )
         return false;
       
-      element.container.disableTextSelect();
+      tagger.container.disableTextSelect();
     } else if ( typeof tagger[arg1] !== 'undefined' ) {
       tagger[arg1](arg2);
     }
@@ -47,23 +47,33 @@ $.extend($.fn.tagger, {
     separator: ', ',
     selected: 'selected'
   },
-  create: function(arg) {
+  create: function(args) {
     var self = this;
-    return $('<li>').text(arg).click(function(){
-      self.component.selected(this) ?
-        self.unselect(this) : self.select(this);
-    }).appendTo(this.container);
+    
+    if ( typeof args == 'object' ) {
+      for ( var i in args ) {
+        $('<li>').text(args[i]).click(function(){
+          self.component.selected(this) ?
+            self.unselect(this) : self.select(this);
+        }).appendTo(this.container);
+      }
+    } else {
+      return $('<li>').text(args).click(function(){
+        self.component.selected(this) ?
+          self.unselect(this) : self.select(this);
+      }).appendTo(this.container);
+    }
   },
   remove: function(arg) {
     
   },
   select: function(arg) {
     this.component.select(arg);
-    $(arg).addClass(this.component.opts.active);
+    $(arg).addClass(this.component.opts.selected);
   },
   unselect: function(arg) {
     this.component.unselect(arg);
-    $(arg).removeClass(this.component.opts.active);
+    $(arg).removeClass(this.component.opts.selected);
   }
 });
 
@@ -76,8 +86,10 @@ $.fn.tagger.component.input = {
     list = this.list();
     for ( var i in list ) {
       tag = $.fn.tagger.create(list[i]);
-      $(tag).addClass(this.opts.active);
+      $(tag).addClass(this.opts.selected);
     }
+    
+    return this.element.has('[type="text"]');
   },
   toggle: function() {
     this.selected(this) ?
