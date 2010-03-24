@@ -136,9 +136,8 @@ $.fn.tagger.component.select = {
   selected: function(tagger, tag) {
     var selected = false;
     this.list(tagger).each(function(){
-      if ( $(this).text() == $(tag).text() && $(this).is(':selected') ) {
+      if ( $(this).text() == $(tag).text() && $(this).is(':selected') )
         selected = true;
-      }
     });
     
     return selected;
