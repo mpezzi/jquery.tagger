@@ -19,7 +19,10 @@ $.fn.tagger = function(arg1, arg2) {
     // Initialize tagger.
     if ( !initialized ) {
       tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
-      tagger.container = $('<ul class="tagger"></ul>').insertAfter(element).disableTextSelect();
+      tagger.container = $('<div class="tagger"></div>').insertAfter(element);
+      tagger.toggle = $('<div class="toggle"></div>').text(opts.toggleText[0]).appendTo(tagger.container);
+      tagger.toggleSelected = $('<div class="toggle-selected"></div>').text(opts.toggleSelectedText[0]).appendTo(tagger.container);
+      tagger.tags = $('<ul class="clearfix"></ul>').appendTo(tagger.container).disableTextSelect();
       tagger.opts = opts;
       tagger.element = element;
       
@@ -40,6 +43,8 @@ $.fn.tagger = function(arg1, arg2) {
 $.extend($.fn.tagger, {
   component: [],
   defaults: {
+    toggleText: ['Show', 'Hide'],
+    toggleSelectedText: ['Show Unselected', 'Show Only Selected'],
     separator: ', ',
     selected: 'selected'
   },
@@ -48,7 +53,7 @@ $.extend($.fn.tagger, {
     return $('<li>').text(arg).click(function(){
       tagger.component.selected(tagger, this) ?
         self.unselect(tagger, this) : self.select(tagger, this);
-    }).appendTo(tagger.container);
+    }).appendTo(tagger.tags);
   },
   add: function(tagger, args) {
     var self = this;
@@ -70,6 +75,12 @@ $.extend($.fn.tagger, {
   unselect: function(tagger, arg) {
     tagger.component.unselect(tagger, arg);
     $(arg).removeClass(tagger.opts.selected);
+  },
+  toggle: function(tagger) {
+
+  },
+  toggleSelected: function(tagger) {
+    
   }
 });
 
