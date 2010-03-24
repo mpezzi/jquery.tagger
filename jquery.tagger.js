@@ -26,6 +26,15 @@ $.fn.tagger = function(arg1, arg2) {
       tagger.opts = opts;
       tagger.element = element;
       
+      // Set up the toggles.
+      tagger.toggle.click(function(){
+        $.fn.tagger.toggle(tagger);
+      });
+      
+      tagger.toggleSelected.click(function(){
+        $.fn.tagger.toggleSelected(tagger);
+      });
+      
       // Save tagger controller.
       element.data('tagger', tagger);
       
