@@ -16,13 +16,12 @@ $.fn.tagger = function(arg1, arg2) {
   return this.each(function(){
     var element = $(this), opts = build_options(element, arg1, arg2), tagger = element.data('tagger') || {}, initialized = element.data('tagger.initialized') || false;
     
-    tagger.opts = opts;
-    tagger.element = element;
-    
     // Initialize tagger.
     if ( !initialized ) {
       tagger.component = $.fn.tagger.component[element.context.nodeName.toLowerCase()];
       tagger.container = $('<ul class="tagger"></ul>').insertAfter(element).disableTextSelect();
+      tagger.opts = opts;
+      tagger.element = element;
       
       // Save tagger controller.
       element.data('tagger', tagger);
@@ -47,7 +46,7 @@ $.extend($.fn.tagger, {
   create: function(tagger, arg) {
     var self = this;
     return $('<li>').text(arg).click(function(){
-      tagger.component.selected(this) ?
+      tagger.component.selected(tagger, this) ?
         self.unselect(tagger, this) : self.select(tagger, this);
     }).appendTo(tagger.container);
   },
@@ -65,11 +64,11 @@ $.extend($.fn.tagger, {
     
   },
   select: function(tagger, arg) {
-    tagger.component.select(arg);
+    tagger.component.select(tagger, arg);
     $(arg).addClass(tagger.opts.selected);
   },
   unselect: function(tagger, arg) {
-    tagger.component.unselect(arg);
+    tagger.component.unselect(tagger, arg);
     $(arg).removeClass(tagger.opts.selected);
   }
 });
@@ -77,17 +76,14 @@ $.extend($.fn.tagger, {
 // Declare form type components.
 $.fn.tagger.component.input = {
   init: function(tagger) {
-    this.opts = tagger.opts;
-    this.element = tagger.element;
-    
-    list = this.list();
+    list = this.list(tagger);
     for ( var i in list ) {
       tag = $.fn.tagger.create(tagger, list[i]);
-      $(tag).addClass(this.opts.selected);
+      $(tag).addClass(tagger.opts.selected);
     }
   },
-  selected: function(tag) {
-    tags = this.list();
+  selected: function(tagger, tag) {
+    tags = this.list(tagger);
     for ( var i in tags ) {
       if ( tags[i] == $(tag).text() )
         return true;
@@ -95,23 +91,23 @@ $.fn.tagger.component.input = {
     
     return false;
   },
-  select: function(tag) {
+  select: function(tagger, tag) {
     text = $(tag).text();
-    this.element.val() ?
-      this.element.val(this.element.val() + this.opts.separator + text) :
-      this.element.val(text);
+    tagger.element.val() ?
+      tagger.element.val(tagger.element.val() + tagger.opts.separator + text) :
+      tagger.element.val(text);
   },
-  unselect: function(tag) {
-    var tag = $(tag).text(), tags = this.list();
+  unselect: function(tagger, tag) {
+    var tag = $(tag).text(), tags = this.list(tagger);
     for ( var i in tags ) {
       if ( tags[i] == tag ) {
         tags.splice(i, 1);
-        this.element.val(tags.join(this.opts.separator));
+        tagger.element.val(tags.join(tagger.opts.separator));
       }
     }
   },
-  list: function() {
-    return this.element.val().split(this.opts.separator);
+  list: function(tagger) {
+    return tagger.element.val().split(tagger.opts.separator);
   }
 };
 
@@ -120,15 +116,15 @@ $.fn.tagger.component.select = {
     this.opts = tagger.opts;
     this.element = tagger.element;
     
-    this.list().each(function(){
+    this.list(tagger).each(function(){
       tag = $.fn.tagger.create(tagger, $(this).text());
       if ( $(this).is(':selected') )
         tag.addClass(tagger.opts.selected);
     });
   },
-  selected: function(tag) {
+  selected: function(tagger, tag) {
     var selected = false;
-    this.list().each(function(){
+    this.list(tagger).each(function(){
       if ( $(this).text() == $(tag).text() && $(this).is(':selected') ) {
         selected = true;
       }
@@ -136,20 +132,20 @@ $.fn.tagger.component.select = {
     
     return selected;
   },
-  select: function(tag) {
-    this.list().each(function(){
+  select: function(tagger, tag) {
+    this.list(tagger).each(function(){
       if ( $(this).text() == $(tag).text() )
         $(this).attr('selected', 'selected');
     });
   },
-  unselect: function(tag) {
-    this.list().each(function(){
+  unselect: function(tagger, tag) {
+    this.list(tagger).each(function(){
       if ( $(this).text() == $(tag).text() )
         $(this).removeAttr('selected');
     });
   },
-  list: function() {
-    return this.element.find('option');
+  list: function(tagger) {
+    return tagger.element.find('option');
   }
 };
 
