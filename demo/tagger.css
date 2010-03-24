@@ -1,5 +1,6 @@
-.tagger {
+.tagger ul {
   display: block;
+  clear: both;
   margin: 5px 0 0 0;
   padding: 0;
   list-style: none;
